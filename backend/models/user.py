@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4, UUID
-import uuid
-from werkzeug.security import generate_password_hash, check_password_hash
+from bcrypt import hashpw, checkpw, gensalt
 from models.base import Base
 from models.resume import Resume
 
@@ -44,19 +43,7 @@ class User(Base):
     def password(self, password: str):
         """Set the password of the user
         """
-        self._hashed_password = generate_password_hash(password)
-
-    # @property
-    # def id(self):
-    #     """Return the id of the user
-    #     """
-    #     return str(self._id)
-    
-    # @id.setter
-    # def id(self, id: str):
-    #     """Set the id of the user
-    #     """
-    #     self._id = uuid.UUID(id)
+        self._hashed_password = hashpw(password.encode(), gensalt(12)).decode("utf-8")
 
     def check_password(self, password: str) -> bool:
         """ validate the user enterded password
@@ -69,7 +56,7 @@ class User(Base):
         ----------
         * bool: True if the password is correct, False otherwise
         """
-        return check_password_hash(self._hashed_password, password)
+        return checkpw(password.encode(), self._hashed_password.encode())
 
 
     def to_dict(self):
