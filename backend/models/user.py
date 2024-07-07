@@ -44,7 +44,10 @@ class User(Base):
         """Set the password of the user
         """
         try:
-            self._hashed_password = hashpw(password.encode(), gensalt(12)).decode("utf-8")
+            if len(password) < 24:
+                self._hashed_password = hashpw(password.encode(), gensalt(12)).decode("utf-8")
+            else:
+                self._hashed_password = password
         except Exception:
             # raise ValueError("The password could not be hashed, or already hashed")
             self._hashed_password = password  # security risk, TODO: seek a better way to handle this
