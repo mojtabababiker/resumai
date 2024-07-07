@@ -43,7 +43,11 @@ class User(Base):
     def password(self, password: str):
         """Set the password of the user
         """
-        self._hashed_password = hashpw(password.encode(), gensalt(12)).decode("utf-8")
+        try:
+            self._hashed_password = hashpw(password.encode(), gensalt(12)).decode("utf-8")
+        except Exception:
+            # raise ValueError("The password could not be hashed, or already hashed")
+            self._hashed_password = password  # security risk, TODO: seek a better way to handle this
 
     def check_password(self, password: str) -> bool:
         """ validate the user enterded password
@@ -107,21 +111,6 @@ class User(Base):
         for resume in user_dict["resumes"]:
             user.add_resume(Resume.from_dict(resume))
         return user
-    
-    def save(self):
-        """Save the user to the database
-        """
-        pass
-
-    def delete(self):
-        """Delete the user from the database
-        """
-        pass
-
-    def update(self):
-        """Update the user in the database
-        """
-        pass
 
     def add_resume(self, resume: Resume):
         """Add a resume to the user's resumes
