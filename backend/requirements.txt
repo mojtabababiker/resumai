@@ -1,1 +1,6 @@
 bcrypt
+
+dnspython==2.6.1
+motor==3.5.0
+pymongo==4.8.0
+
