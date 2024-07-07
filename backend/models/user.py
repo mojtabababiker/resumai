@@ -109,23 +109,24 @@ class User(Base):
             is_admin=user_dict["is_admin"]
         )
         for resume in user_dict["resumes"]:
-            user.add_resume(Resume.from_dict(resume))
+            user.resumes.append(Resume.from_dict(resume))
         return user
 
-    def add_resume(self, resume: Resume):
+    async def add_resume(self, resume: Resume):
         """Add a resume to the user's resumes
         """ 
         self.resumes.append(resume)
-        self.save()
+        return await self.update_resumes(op='push', resume=resume)
 
-    def remove_resume(self, resume_id: UUID):
+    async def remove_resume(self, resume_id: UUID):
         """Remove a resume from the user's resumes
         """
         # resume = [resume for resume in self.resumes if resume.id == resume_id] or None
         # if resume:
         try:
-            self.resumes.remove([resume for resume in self.resumes if resume.id == resume_id][0])
-            self.save()
+            resume = [resume for resume in self.resumes if resume.id == resume_id][0]
+            self.resumes.remove(resume)
+            return await self.update_resumes(op='pop', resume=resume)
         except (ValueError, IndexError):
             raise ValueError("The resume does not exist in the user's resumes")
 
@@ -192,8 +193,8 @@ if __name__ == "__main__":
     user = User(first_name="John", last_name="Doe", email="john@doe.com", password="1234" ,is_active=True, is_admin=True)
     # print(user.full_name)
     print(user.check_password("1234"))
-    user.add_resume(resume_1)
-    user.add_resume(resume_2)
+    # user.add_resume(resume_1)
+    # user.add_resume(resume_2)
     # print(user.to_dict())
     user2 = User.from_dict(user.to_dict())
     print(user2.to_dict())

@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 from uuid import uuid4, UUID
+from models import dbEngine
 
 @dataclass
 class Base:
@@ -33,17 +34,89 @@ class Base:
             self.__dict__[name] = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S')
         super().__setattr__(name, value)
 
-    def save(self):
-        """Save the model to the database
-        """
-        pass
+    async def save(self) -> str | None:
+        """Save the model object to the database
 
-    def delete(self):
+        Returns:
+        --------
+        * str: the id of the saved document or None if the save failed
+        """
+        collection = f"{self.__class__.__name__.lower()}s"
+        model_doc = self.to_dict()
+        result = await dbEngine.save(collection, model_doc)
+        return result
+
+    async def delete(self) -> bool:
         """Delete the model from the database
-        """
-        pass
 
-    def update(self):
-        """Update the model in the database
+        Returns:
+        --------
+        * bool: True if the delete operation was successful, False otherwise
         """
-        pass
+        collection = f"{self.__class__.__name__.lower()}s"
+        result = await dbEngine.delete(collection, self.id)
+        return result
+
+    async def update(self, data: dict) -> bool:
+        """Update the model in the database by setting the data
+
+        Parameters:
+        -----------
+        * data: dict: the data to update the model with
+
+        Returns:
+        --------
+        * bool: True if the update operation was successful, False otherwise
+        """
+        collection = f"{self.__class__.__name__.lower()}s"
+        filtered_data = {k: v for k, v in data.items()
+                         if k not in ['id', 'created_at']}
+        result = await dbEngine.update(collection, self.id, filtered_data)
+        return result
+    
+    async def update_resumes(self, op: str, resume: object) -> bool:
+        """Update the user's resumes in the database
+
+        Parameters:
+        -----------
+        * op: str: the operation to perform on the resumes list
+        * resume: Resume object: the resume object to push/delete into/from the user's resumes
+
+        Returns:
+        --------
+        * bool: True if the update operation was successful, False otherwise
+        """
+        collection = f"{self.__class__.__name__.lower()}s"
+        try:
+            if op == 'push':
+                return await dbEngine.db[collection].update_one(
+                    {'_id': self.id},
+                    {'$push': {'resumes': resume.to_dict()}}  # type: ignore
+                )
+            elif op == 'pop':
+                return await dbEngine.db[collection].update_one(
+                    {'_id': self.id},
+                    {'$pull': {'resumes': {'_id': resume.id}}}  # type: ignore
+                )
+        except Exception as e:
+            print(e)
+            return False
+        return False
+
+    @classmethod
+    async def find_one(cls, query: dict) -> object | None:
+        """Find one document in the database
+
+        Parameters:
+        -----------
+        * query: dict: the query to search for
+
+        Returns:
+        --------
+        * Any: the document found or None if not found
+        """
+        collection = f"{cls.__name__.lower()}s"
+        result = await dbEngine.find_one(collection, query)
+        if result:
+            return cls.from_dict(result)  # type: ignore
+        return None
