@@ -5,7 +5,7 @@ import os
 import requests
 from urllib.parse import urlencode
 from bs4 import BeautifulSoup
-from markdownify import markdownify as md # type: ignore
+from markdownify import markdownify as md
 
 
 load_dotenv('.env', verbose=True)
