@@ -1,5 +1,4 @@
 """An abstarct class for mongo database engine"""
-from dataclasses import dataclass, field
 from os import environ
 from typing import Any
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -10,7 +9,7 @@ class DBEngine:
     def __init__(self):
         """Initialize the database engine, and construct the client and database objects
         """
-        self.client: AsyncIOMotorClient = AsyncIOMotorClient(environ.get('HOST', 'localhost'), int(environ.get('PORT', 27017)))
+        self.client: AsyncIOMotorClient = AsyncIOMotorClient(environ.get('DB_HOST', 'localhost'), int(environ.get('DB_PORT', 27017)))
         self.db: AsyncIOMotorDatabase = self.client[environ.get("DB_NAME", 'test_db')]  # type: ignore
     
     async def save(self, collection: str, data: dict) -> str | None:
