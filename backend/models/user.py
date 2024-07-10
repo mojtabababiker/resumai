@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4, UUID
-import uuid
-from werkzeug.security import generate_password_hash, check_password_hash
+from bcrypt import hashpw, checkpw, gensalt
 from models.base import Base
 from models.resume import Resume
 
@@ -44,19 +43,14 @@ class User(Base):
     def password(self, password: str):
         """Set the password of the user
         """
-        self._hashed_password = generate_password_hash(password)
-
-    # @property
-    # def id(self):
-    #     """Return the id of the user
-    #     """
-    #     return str(self._id)
-    
-    # @id.setter
-    # def id(self, id: str):
-    #     """Set the id of the user
-    #     """
-    #     self._id = uuid.UUID(id)
+        try:
+            if len(password) < 24:
+                self._hashed_password = hashpw(password.encode(), gensalt(12)).decode("utf-8")
+            else:
+                self._hashed_password = password
+        except Exception:
+            # raise ValueError("The password could not be hashed, or already hashed")
+            self._hashed_password = password  # security risk, TODO: seek a better way to handle this
 
     def check_password(self, password: str) -> bool:
         """ validate the user enterded password
@@ -69,7 +63,7 @@ class User(Base):
         ----------
         * bool: True if the password is correct, False otherwise
         """
-        return check_password_hash(self._hashed_password, password)
+        return checkpw(password.encode(), self._hashed_password.encode())
 
 
     def to_dict(self):
@@ -118,38 +112,24 @@ class User(Base):
             is_admin=user_dict["is_admin"]
         )
         for resume in user_dict["resumes"]:
-            user.add_resume(Resume.from_dict(resume))
+            user.resumes.append(Resume.from_dict(resume))
         return user
-    
-    def save(self):
-        """Save the user to the database
-        """
-        pass
 
-    def delete(self):
-        """Delete the user from the database
-        """
-        pass
-
-    def update(self):
-        """Update the user in the database
-        """
-        pass
-
-    def add_resume(self, resume: Resume):
+    async def add_resume(self, resume: Resume):
         """Add a resume to the user's resumes
         """ 
         self.resumes.append(resume)
-        self.save()
+        return await self.update_resumes(op='push', resume=resume)
 
-    def remove_resume(self, resume_id: UUID):
+    async def remove_resume(self, resume_id: UUID):
         """Remove a resume from the user's resumes
         """
         # resume = [resume for resume in self.resumes if resume.id == resume_id] or None
         # if resume:
         try:
-            self.resumes.remove([resume for resume in self.resumes if resume.id == resume_id][0])
-            self.save()
+            resume = [resume for resume in self.resumes if resume.id == resume_id][0]
+            self.resumes.remove(resume)
+            return await self.update_resumes(op='pop', resume=resume)
         except (ValueError, IndexError):
             raise ValueError("The resume does not exist in the user's resumes")
 
@@ -216,8 +196,8 @@ if __name__ == "__main__":
     user = User(first_name="John", last_name="Doe", email="john@doe.com", password="1234" ,is_active=True, is_admin=True)
     # print(user.full_name)
     print(user.check_password("1234"))
-    user.add_resume(resume_1)
-    user.add_resume(resume_2)
+    # user.add_resume(resume_1)
+    # user.add_resume(resume_2)
     # print(user.to_dict())
     user2 = User.from_dict(user.to_dict())
     print(user2.to_dict())
