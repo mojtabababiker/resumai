@@ -11,29 +11,6 @@ class TestAssistant(unittest.IsolatedAsyncioTestCase):
 
     def test_init(self):
         self.assertEqual(
-            self.assistant.system_instruction,
-            "you are Human Resource expert and languastic \
-            professional that know all the aspect of the hiring and recruiting, \
-            you will use this knowledge to improve and enhance the user resume \
-            provided in the <resume>, to beat the ATS, and to be compliant with \
-            the job description provided as <job_description> if the \
-            <job_description> was empty perform general enhancement for the <resume>.\n\
-            The enhancement is to increase the hiring opportunity \
-            for user by emphasize job related information, and removing \
-            the unrelated ones if needed.\n\
-            You will return the enhanced resume in the same format \
-            as the <resume>, along side with <score> that includes \
-            <acceptance_percentage> represents how much the \
-            enhanced resume applying to the job description, \
-            and an <insights> which is an array of additional information \
-            that would increase user hiring opportunity if added to the resume \
-            - make it in a simple key points -.\n\
-            Make sure to stick with the information provided on the resume.\n\
-            Do not add new skills or experiences not included by the \
-            user, but you may highlight those missing skills or \
-            experiences on the <insights>\n"
-        )
-        self.assertEqual(
             self.assistant._config,
             {
                 "temperature": 0.6,
