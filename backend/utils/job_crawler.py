@@ -51,7 +51,7 @@ class JobCrawler:
         
         self.__proxy_params['url'] = url
         try:
-            response = requests.get(self.__proxy_url, params=urlencode(self.__proxy_params), timeout=35)
+            response = requests.get(self.__proxy_url, params=urlencode(self.__proxy_params), timeout=35)  # type: ignore
             response.raise_for_status()
         except requests.exceptions.InvalidURL:
             raise ValueError("Invalid URL")
@@ -85,7 +85,7 @@ class JobCrawler:
             return "linkedin"
         return None
 
-    def _parse_html(self, html: str) -> str|None:
+    def _parse_html(self, html: str) -> str:
         """Parse the html page of the job and return the description
 
         Parameters:
@@ -98,11 +98,14 @@ class JobCrawler:
         """
         soup = BeautifulSoup(html, "html.parser")
         description = soup.find("body")
-        for tag in self._parse_tags:  # type: ignore
-            description = description.find(tag.get("tag"), class_=tag.get("class"))  # type: ignore
-
-        if not description:
+        try:
+            for tag in self._parse_tags:  # type: ignore
+                description = description.find(tag.get("tag"), class_=tag.get("class"))  # type: ignore
+        except AttributeError:
             raise ValueError("No job description found")
+
+        # if not description:
+            # raise ValueError("No job description found")
 
         return str(description)
     
