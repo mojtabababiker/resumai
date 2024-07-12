@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 # import schemas
 from app.v1.schema.auth_schemas import Token
-from app.v1.schema.resume_schemas import ResumeCreate
+from app.v1.schema.resume_schemas import ResumeCreate, ResumeUpdate
 
 # import dependencies
 from app.v1.utils.access_token import get_current_user
@@ -94,3 +94,20 @@ async def delete_resume(
         raise exception
     if not deleted:
         raise exception
+
+@router.put('/{resume_id}', status_code=status.HTTP_200_OK)
+async def update_resume(resume_id: str, data: Annotated[ResumeUpdate, Body()], user: Annotated[User, Depends(get_current_user)]):
+    """Update the user Resume with ID equal to resume_id by using the data in data
+    
+    Parameters:
+    * **resume_id**: str: the ID of the resume to update
+    * **data**: dict: 
+    """
+    try:
+        result = await user.edit_resume(resume_id, data.model_dump(exclude_defaults=True))
+        assert result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )

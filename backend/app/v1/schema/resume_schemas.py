@@ -45,7 +45,7 @@ class Link(BaseModel):
     * type: LinkType, the type of the link [linkedIn, GitHub]
     * linkUrl: str, the url of the link
     """
-    type: LinkType
+    type: str
     linkUrl: str
 
 
@@ -157,6 +157,28 @@ class Language(BaseModel):
     name: str
     proficient: LanguageProficiencyLevel
 
+class ResumeData(BaseModel):
+    """The Resume schema
+    This schema is used to define the fields required to create a resume
+    * title
+    * summary
+    * experiences: `Optional`
+    * education
+    * achievements: `optional`
+    * certificates: `Optional`
+    * skills
+    * languages
+    """
+    title: Title | None = None
+    summary: str | None = None
+    education: list[Education] | None = None
+    projects: list[Project] | None = None
+    experiences: list[Experience] | None = None
+    achievements: list[Achievement] | None = None
+    certificates: list[Certificate] | None = None
+    skills: list[str] | None = None
+    languages: list[Language] | None = None
+
 
 class ResumeCreate(BaseModel):
     """The Resume schema
@@ -181,3 +203,21 @@ class ResumeCreate(BaseModel):
     certificates: list[Certificate] = field(default_factory=list)
     skills: list[str] = field(default_factory=list)
     languages: list[Language] = field(default_factory=list)
+
+
+class ResumeUpdate(BaseModel):
+    """The Resume schema
+    This schema is used to define the fields required to create a resume
+    * templateId
+    * title
+    * summary
+    * experiences: `Optional`
+    * education
+    * achievements: `optional`
+    * certificates: `Optional`
+    * skills
+    * languages
+    """
+    templateId: str | None = None
+    updated_at: str | None = None
+    data: ResumeData | None = None
