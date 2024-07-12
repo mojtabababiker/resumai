@@ -4,9 +4,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.v1.views import auth
 
 app = FastAPI(title="Resumai API", version="0.1.0", root_path="/api/v1")
-
+app.include_router(auth.router)
 # Add CORS middleware to allow cross-origin requests
 origins = [
     "http://localhost",

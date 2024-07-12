@@ -3,6 +3,11 @@
 from pydantic import BaseModel
 
 class TokenData(BaseModel):
-    """The token data schema"""
+    """The jwt extracted token data schema"""
     id: str
     scoop: str
+
+class Token(BaseModel):
+    """The jwt token schema"""
+    access_token: str
+    token_type: str
