@@ -19,6 +19,17 @@ router = APIRouter(
     tags=['resume']
 )
 
+@router.get('/')
+async def get_all_resumes(user: Annotated[User, Depends(get_current_user)]) -> list[Resume]:
+    """Get all the Resumes for the current logged in user
+    
+    Parameters:
+    * **user**: User: the current logged in user
+    
+    Returns: list[Resume]: return a list of all the resumes
+    """
+    return user.resumes
+
 @router.get('/{resume_id}')
 async def get_resume(resume_id: str, user: Annotated[User, Depends(get_current_user)]) -> Resume:
     """Get the user Resume with id equal to resume_id, and returns it
