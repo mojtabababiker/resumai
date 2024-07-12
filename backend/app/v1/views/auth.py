@@ -13,10 +13,13 @@ from models.user import User
 
 router = APIRouter(
     prefix="/auth",
-    tags=["auth"]
+    tags=["auth"],
+    responses={
+        201: {"description": "Created successfully"},
+        200: {"description": "Success"},}
 )
 
-@router.post("/session", response_model=str)
+@router.post("/session")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> Token:
     """Login the user based on the provided credentials and return an access token
     
@@ -24,15 +27,15 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> T
     -----------
     * **form_data**: OAuth2PasswordRequestForm: the form data containing the user credentials (username and password)
     
-    Returns: str: the `access token`
+    Returns: Token: the `access token` object
     """
     email = form_data.username
     password = form_data.password
-    remember_me = form_data.scopes[0]
+    remember_me = form_data.scopes[0] if form_data.scopes else None
     user: User| None = await User.find_one({"email": email})  # type: ignore
     if not user or not user.check_password(password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
-    duration = 0 if remember_me == 'checked' else 1440 # 1 day
-    token = await create_access_token(user.id, duration)
-    return Token(access_token=token, token_type="bearer")
+    duration = 0 if remember_me else 1440 # 1 day
+    access_token = await create_access_token(user.id, duration)
+    return Token(access_token=access_token, token_type="bearer")
     
