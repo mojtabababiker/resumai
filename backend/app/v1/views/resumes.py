@@ -19,6 +19,26 @@ router = APIRouter(
     tags=['resume']
 )
 
+@router.get('/')
+async def get_resume(resume_id: str, user: Annotated[User, Depends(get_current_user)]) -> Resume:
+    """Get the user Resume with id equal to resume_id, and returns it
+    
+    Parameters:
+    -----------
+    * **resume_id**: str: the id of the required Resume
+    * **user**: User: the current logged in user object
+    
+    Returns: Resume: the object contains all the `resume fields`
+    """
+    try:
+        resume = [resume_object for resume_object in user.resumes if resume_object.id == resume_id][0]
+    except IndexError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+    return resume
+
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def add_resume(
     resume: Annotated[ResumeCreate, Body()],
