@@ -23,7 +23,7 @@ router = APIRouter(
 async def add_resume(
     resume: Annotated[ResumeCreate, Body()],
     user: Annotated[User, Depends(get_current_user)]
-    ) -> dict:
+    ) -> str:
     """Create a new Resume for the logged in user, and return its ID
     
     Parameters:
@@ -40,8 +40,7 @@ async def add_resume(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='An Error occurred please try again later'
         )
-    # await user.save()
-    return resume_object.to_dict()
+    return resume_object.id
 
 @router.delete('/')
 async def delete_resume(
@@ -59,7 +58,7 @@ async def delete_resume(
             detail="Resume Not found"
         )
     try:
-        deleted = not await current_user.remove_resume(resume_id=resume_id)
+        deleted = await current_user.remove_resume(resume_id=resume_id)
     except ValueError:
         raise exception
     if not deleted:
