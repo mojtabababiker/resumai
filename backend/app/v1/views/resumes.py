@@ -19,7 +19,7 @@ router = APIRouter(
     tags=['resume']
 )
 
-@router.get('/')
+@router.get('/{resume_id}')
 async def get_resume(resume_id: str, user: Annotated[User, Depends(get_current_user)]) -> Resume:
     """Get the user Resume with id equal to resume_id, and returns it
     
