@@ -23,4 +23,3 @@ class EnhanceOut(BaseModel):
     """
     resume_data: ResumeData
     scoring_insights: ScoringInsight
-
