@@ -99,9 +99,44 @@ class Base:
                     {'$pull': {'resumes': {'_id': resume.id}}}  # type: ignore
                 )
         except Exception as e:
-            print(e)
+            # print(e)
             return False
         return False
+    
+    async def edit_resume(self, resume_id:str, updates:dict):
+        """Update the user resume with the id resume_id by setting the fields in the update_data
+        
+        Parameters:
+        -----------
+        
+        * resume_id: str: the id of the resume to update
+        * update_data: dict: dictionary contains the data fields to update
+        
+        """
+        collection = f"{self.__class__.__name__.lower()}s"
+        update_objects = {"$set": {}}  # the update object to be passed to the update_one method
+
+        update_data = updates.pop('data', None)  # if the updates contains the resume data field
+        if update_data:
+            update_objects["$set"].update(
+                # then for each field in the data field, update the field in the database
+                {f"resumes.$.data.{key}": val for key, val in update_data.items()}
+            )
+
+        # add the rest of the fields to the update object if they are allowed to be updated 
+        update_objects["$set"].update(
+            {f"resumes.$.{key}": val for key, val in updates.items() if key in ['updated_at', 'templateId']}
+        )
+        # print(update_objects)
+        try:
+            result = await dbEngine.db[collection].update_one(
+                {"_id": self.id, "resumes._id": resume_id},
+                update=update_objects,
+            )
+        except Exception as e:
+            # print(e)
+            return False
+        return result.modified_count > 0
 
     @classmethod
     async def find_one(cls, query: dict) -> object | None:
