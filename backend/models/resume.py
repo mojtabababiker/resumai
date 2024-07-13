@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
-""" A module that holds the database model abstarction for the resumes document
+""" A module that holds the database model abstraction for the resumes document
 """
 from dataclasses import dataclass, field
-from typing import List, Optional
 from datetime import datetime
-from uuid import uuid4, UUID
 from enum import Enum
+from pydantic import BaseModel
+from typing import List, Optional
+from uuid import uuid4, UUID
+
+from pydantic_core import Url
 
 from models.base import Base
 
-class LinkType(Enum):
-    """The link type enum class that represent the type of the link
-    
-    Options:
-    --------
-    * LINKEDIN
-    * GITHUB
-    """
-    LINKEDIN = "linkedIn"
-    GITHUB = "GitHub"
 
 class LanguageProficiencyLevel(Enum):
     """The language proficiency level enum class that represent the proficiency level of a language
@@ -38,32 +31,30 @@ class LanguageProficiencyLevel(Enum):
     NATIVE = "native"
 
 
-@dataclass
-class Link:
+class Link(BaseModel):
     """The link dataclass that represent the link field in the resume
     
     Parameters:
     -----------
-    * type: LinkType, the type of the link [linkedIn, GitHub]
+    * type: str, the type of the link [linkedIn, GitHub]
     * linkUrl: str, the url of the link
     """
-    type: LinkType
+    type: str
     linkUrl: str
 
 
-@dataclass
-class Title:
+class Title(BaseModel):
     """The title dataclass that represent the title field in the resume
     
     Parameters:
     -----------
     * name: str, the name of the person
-    * jobTitle: str, the job title appling for
+    * jobTitle: str, the job title applying for
     * links: List[Link], the list of links to the person's social media
     """
     name: str
     jobTitle: str
-    links: Optional[List[Link]] = field(default_factory=list)
+    links: list[Link] | None = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Title':
@@ -81,55 +72,41 @@ class Title:
         return cls(
             name=data['name'],
             jobTitle=data['jobTitle'],
-            links=[Link(link['type'], link['linkUrl']) for link in data['links']] if 'links' in data else None
+            links=[Link(type=item['type'], linkUrl=item['linkUrl']) for item in data['links']]
         )
 
 
-@dataclass
-class Experience:
-    """The experience dataclass that represent the experience field in the resume
+class Project(BaseModel):
+    """The Project dataclass that represent the project field in the resume
 
     Parameters:
     -----------
-    * companyName: str, the name of the company
-    * roleTitle: str, the title of the role in the company
-    * startingDate: datetime, the starting date of the job
-    * endingDate: Optional[datetime], the ending date of the job
-    * location: str, the location of the company
-    * summary: str, the summary of the experience
+    * title: str, the title of the project
+    * description: str, the description of the project
     """
-    companyName: str
-    roleTitle: str
-    startingDate: datetime
-    endingDate: Optional[datetime]
-    location: str
-    summary: Optional[str]
+    title: str
+    description: str
 
     @classmethod
-    def from_dict(cls, data: dict) -> 'Experience':
-        """Convert the dictionary to an experience object instance
+    def from_dict(cls, data: dict) -> 'Project':
+        """Convert the dictionary to a project object instance
         
         Parameters:
         -----------
         
-        * data: dict, the dictionary representation of the experience
+        * data: dict, the dictionary representation of the project
         
         Returns:
         --------
-        Experience: the experience object instance
+        Project: the project object instance
         """
         return cls(
-            companyName=data['companyName'],
-            roleTitle=data['roleTitle'],
-            startingDate=datetime.strptime(data['startingDate'], "%Y-%m-%d"),
-            endingDate=datetime.strptime(data['endingDate'], "%Y-%m-%d") if 'endingDate' in data else None,
-            location=data['location'],
-            summary=data['summary'] if 'summary' in data else None
+            title=data['title'],
+            description=data['description']
         )
 
 
-@dataclass
-class Education:
+class Education(BaseModel):
     """The education dataclass that represent the education field in the resume
 
     Parameters:
@@ -143,10 +120,10 @@ class Education:
     """
     schoolName: str
     degreeTitle: str
-    startingDate: Optional[datetime]
-    endingDate: Optional[datetime]
     location: str
-    summary: Optional[str]
+    summary: str|None = None
+    startingDate: datetime|None = None
+    endingDate: datetime|None = None
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Education':
@@ -164,15 +141,62 @@ class Education:
         return cls(
             schoolName=data['schoolName'],
             degreeTitle=data['degreeTitle'],
-            startingDate=datetime.strptime(data['startingDate'], "%Y-%m-%d") if 'startingDate' in data else None,
-            endingDate=datetime.strptime(data['endingDate'], "%Y-%m-%d") if 'endingDate' in data else None,
             location=data['location'],
-            summary=data['summary'] if 'summary' in data else None
+            summary=data['summary'] if 'summary' in data else None,
+            startingDate=data['startingDate'],
+            endingDate=data['endingDate'] if 'endingDate' in data else None
         )
 
 
-@dataclass
-class Achievement:
+class Experience(BaseModel):
+    """The experience dataclass that represent the experience field in the resume
+
+    Parameters:
+    -----------
+    * companyName: str, the name of the company
+    * roleTitle: str, the title of the role in the company
+    * startingDate: datetime, the starting date of the job
+    * endingDate: Optional[datetime], the ending date of the job
+    * location: str, the location of the company
+    * summary: str, the summary of the experience
+    """
+    companyName: str
+    roleTitle: str
+    location: str
+    summary: Optional[str]
+    startingDate: datetime
+    endingDate: datetime|str = 'present'
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Experience':
+        """Convert the dictionary to an experience object instance
+        
+        Parameters:
+        -----------
+        
+        * data: dict, the dictionary representation of the experience
+        
+        Returns:
+        --------
+        Experience: the experience object instance
+        """
+        # if data['endingDate'] is None:
+        #     endingDate = None
+        # elif data['endingDate'] == 'present':
+        #     endingDate = 'present'
+        # else:
+        #     endingDate = datetime.strptime(data['endingDate'], "%Y-%m-%d")
+        return cls(
+            companyName=data['companyName'],
+            roleTitle=data['roleTitle'],
+            startingDate=data['startingDate'], # datetime.strptime(data['startingDate'], "%Y-%m-%d"),
+            endingDate=data['endingDate'], # endingDate,  # type: ignore
+            location=data['location'],
+            summary=data['summary'] if data['summary'] else None
+        )
+
+   
+class Achievement(BaseModel):
     """The achievement dataclass that represent the achievement field in the resume
 
     Parameters:
@@ -202,8 +226,7 @@ class Achievement:
         )
 
 
-@dataclass
-class Certificate:
+class Certificate(BaseModel):
     """The certificate dataclass that represent the certificate field in the resume
 
     Parameters:
@@ -232,8 +255,8 @@ class Certificate:
             description=data['description']
         )
 
-@dataclass
-class Language:
+
+class Language(BaseModel):
     """The language dataclass that represent the language field in the resume
 
     Parameters:
@@ -242,7 +265,7 @@ class Language:
     * proficient: LanguageProficiencyLevel, the proficiency level of the language
     """
     name: str
-    proficient: LanguageProficiencyLevel
+    proficient: str  # LanguageProficiencyLevel
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Language':
@@ -259,7 +282,7 @@ class Language:
         """
         return cls(
             name=data['name'],
-            proficient=LanguageProficiencyLevel(data['proficient'])
+            proficient=data['proficient']
         )
 
 
@@ -281,12 +304,14 @@ class ResumeData:
     """
     title: Title
     summary: str
-    experiences: List[Experience] = field(default_factory=list)
-    education: List[Education] = field(default_factory=list)
-    achievements: Optional[List[Achievement]] = field(default_factory=list)
-    certificates: Optional[List[Certificate]] = field(default_factory=list)
-    skills: List[str] = field(default_factory=list)
-    languages: List[Language] = field(default_factory=list)
+    projects: list[Project] = field(default_factory=list)
+    experiences: list[Experience] = field(default_factory=list)
+    education: list[Education] = field(default_factory=list)
+    achievements: list[Achievement]|None = field(default_factory=list)
+    certificates: list[Certificate]|None = field(default_factory=list)
+    skills: list[str] = field(default_factory=list)
+    languages: list[Language] = field(default_factory=list)
+
 
 @dataclass
 class Resume(Base):
@@ -338,7 +363,7 @@ class Resume(Base):
             return obj
         elif isinstance(obj, datetime):
             return obj.strftime("%Y-%m-%d")
-        elif isinstance(obj, UUID):
+        elif isinstance(obj, (UUID, Url)):
             return str(obj)
         elif isinstance(obj, Enum):
             return obj.value
@@ -370,6 +395,7 @@ class Resume(Base):
             created_at=data['created_at'],
             updated_at=data['updated_at'],
             templateId=data['templateId']
+
         )
     
     @classmethod
@@ -388,6 +414,7 @@ class Resume(Base):
         return ResumeData(
             title=Title.from_dict(data['title']),
             summary=data['summary'],
+            projects=[Project.from_dict(item) for item in data['projects']],
             experiences=[Experience.from_dict(item) for item in data['experiences']],
             education=[Education.from_dict(item) for item in data['education']],
             achievements=[Achievement.from_dict(item) for item in data['achievements']] if data.get('achievements', None) else None,
@@ -395,62 +422,3 @@ class Resume(Base):
             skills=data['skills'],
             languages=[Language.from_dict(item) for item in data['languages']]
         )
-
-
-if __name__ == "__main__":
-    resume_dict = {
-        "_id": "f2611d97-2a4a-4df0-abbe-39bc5d074b6e",
-        "created_at": "2024-01-01T00:00:00",
-        "updated_at": "2024-01-01T00:00:00",
-        "templateId": "f2611d97-2a4a-4afc-abbe-39bc5d074b6e",
-        "data": {
-            "title": {
-                "name": "John Doe",
-                "jobTitle": "Software Engineer",
-                "links": [
-                    {
-                        "type": "linkedIn",
-                        "linkUrl": "https://www.linkedin.com/in/johndoe"
-                    },
-                    {
-                        "type": "GitHub",
-                        "linkUrl": "https://www.github.com/in/johndoe",
-                    },
-                ],
-            },
-            "summary": "A software engineer with 5 years of experience in software development",
-            "experiences": [
-                {
-                    "companyName": "Google",
-                    "roleTitle": "Software Engineer",
-                    "startingDate": "2016-01-01",
-                    "endingDate": "2021-01-01",
-                    "location": "Mountain View, CA",
-                    "summary": "Worked on the search engine team"
-                }
-            ],
-            "education": [
-                {
-                    "schoolName": "MIT",
-                    "degreeTitle": "Bachelor of Science in Computer Science",
-                    "startingDate": "2012-01-01",
-                    "endingDate": "2016-12-31",
-                    "location": "Cambridge, MA",
-                    "summary": "Graduated with honors"
-                }
-            ],
-            "skills": ["Python", "JavaScript", "React"],
-            "languages": [
-                {
-                    "name": "English",
-                    "proficient": "native"
-                },
-                {
-                    "name": "Spanish",
-                    "proficient": "proficient"
-                }
-            ],
-        }
-    }
-    resume = Resume.from_dict(resume_dict)
-    print(resume.to_dict())

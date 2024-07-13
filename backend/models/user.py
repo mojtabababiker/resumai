@@ -121,7 +121,7 @@ class User(Base):
         self.resumes.append(resume)
         return await self.update_resumes(op='push', resume=resume)
 
-    async def remove_resume(self, resume_id: UUID):
+    async def remove_resume(self, resume_id: str):
         """Remove a resume from the user's resumes
         """
         # resume = [resume for resume in self.resumes if resume.id == resume_id] or None
@@ -132,74 +132,3 @@ class User(Base):
             return await self.update_resumes(op='pop', resume=resume)
         except (ValueError, IndexError):
             raise ValueError("The resume does not exist in the user's resumes")
-
-
-if __name__ == "__main__":
-    resume_dict = {
-        "_id": "f2611d97-2a4a-4df0-abbe-39bc5d074b6e",
-        "created_at": "2024-01-01T00:00:00",
-        "updated_at": "2024-01-01T00:00:00",
-        "templateId": "f2611d97-2a4a-4afc-abbe-39bc5d074b6e",
-        "data": {
-            "title": {
-                "name": "John Doe",
-                "jobTitle": "Software Engineer",
-                "links": [
-                    {
-                        "type": "linkedIn",
-                        "linkUrl": "https://www.linkedin.com/in/johndoe"
-                    },
-                    {
-                        "type": "GitHub",
-                        "linkUrl": "https://www.github.com/in/johndoe",
-                    },
-                ],
-            },
-            "summary": "A software engineer with 5 years of experience in software development",
-            "experiences": [
-                {
-                    "companyName": "Google",
-                    "roleTitle": "Software Engineer",
-                    "startingDate": "2016-01-01",
-                    "endingDate": "2021-01-01",
-                    "location": "Mountain View, CA",
-                    "summary": "Worked on the search engine team"
-                }
-            ],
-            "education": [
-                {
-                    "schoolName": "MIT",
-                    "degreeTitle": "Bachelor of Science in Computer Science",
-                    "startingDate": "2012-01-01",
-                    "endingDate": "2016-12-31",
-                    "location": "Cambridge, MA",
-                    "summary": "Graduated with honors"
-                }
-            ],
-            "skills": ["Python", "JavaScript", "React"],
-            "languages": [
-                {
-                    "name": "English",
-                    "proficient": "native"
-                },
-                {
-                    "name": "Spanish",
-                    "proficient": "proficient"
-                }
-            ],
-        }
-    }
-    resume_1 = Resume.from_dict(resume_dict)
-    # print(resume.to_dict())
-    resume_dict["_id"] = "f2611d97-2a4a-4df0-abbe-39bc5d074baa"
-    resume_2 = Resume.from_dict(resume_dict)
-    user = User(first_name="John", last_name="Doe", email="john@doe.com", password="1234" ,is_active=True, is_admin=True)
-    # print(user.full_name)
-    print(user.check_password("1234"))
-    # user.add_resume(resume_1)
-    # user.add_resume(resume_2)
-    # print(user.to_dict())
-    user2 = User.from_dict(user.to_dict())
-    print(user2.to_dict())
-    # print(user2 == user)
-    print(user2 is user)
