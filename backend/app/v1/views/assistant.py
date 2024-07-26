@@ -33,7 +33,8 @@ async def enhance_resume(
     
     Returns: EnhanceOut: the enhanced `resume data` and `scoring insights`
     """
-    resume_dict = resume.model_dump(exclude_defaults=True, exclude_none=True, exclude_unset=True)
+    # resume_dict = resume.model_dump(exclude_defaults=True, exclude_none=True, exclude_unset=True)
+    resume_dict = resume
     if job_description:
         enhanced_resume = await AIAssistant.enhance_resume(resume_dict, job_description.strip())
     elif job_url:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Users Resumes views model"""
+from datetime import datetime
 from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 
@@ -63,7 +64,10 @@ async def add_resume(
     
     Returns: str: the created resume `id`
     """
-    resume_dict = resume.model_dump()
+    if not isinstance(resume, dict):
+        resume_dict = resume.model_dump()
+    else:
+        resume_dict = resume
     templateId = resume_dict.pop('templateId')
     resume_object = Resume(templateId=templateId, data=Resume._data_from_dict(resume_dict))
     if not await user.add_resume(resume_object):
@@ -104,7 +108,9 @@ async def update_resume(resume_id: str, data: Annotated[ResumeUpdate, Body()], u
     * **data**: dict: 
     """
     try:
-        result = await user.edit_resume(resume_id, data.model_dump(exclude_defaults=True))
+        updates = data.model_dump(exclude_defaults=True)
+        updates["updated_at"] = datetime.now()
+        result = await user.edit_resume(resume_id, updates)
         assert result
     except Exception as e:
         raise HTTPException(

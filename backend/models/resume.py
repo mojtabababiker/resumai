@@ -122,8 +122,8 @@ class Education(BaseModel):
     degreeTitle: str
     location: str
     summary: str|None = None
-    startingDate: datetime|None = None
-    endingDate: datetime|None = None
+    startingDate: datetime|None|str = None
+    endingDate: datetime|None|str = None
 
     @classmethod
     def from_dict(cls, data: dict) -> 'Education':

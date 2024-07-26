@@ -44,9 +44,10 @@ class Assistant:
             ---------
             enhanced_resume: dict, in the same format of the resume_data   
         """
-        if not resume_data or not isinstance(resume_data, dict):
-            raise TypeError('resume_data is not in dictionary format')
-        resume_json_data = json.dumps(resume_data)
+        # if not resume_data or not isinstance(resume_data, dict):
+            # raise TypeError('resume_data is not in dictionary format')
+        #resume_json_data = json.dumps(resume_data)
+        resume_json_data = resume_data.model_dump_json(exclude_defaults=True, exclude_none=True, exclude_unset=True)
         chat = self.model.start_chat(
             history=[
                 {
